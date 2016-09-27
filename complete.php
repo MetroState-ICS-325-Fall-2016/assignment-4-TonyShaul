@@ -10,14 +10,22 @@ require 'FormHelper.php';
 $sweets = array('puff' => 'Sesame Seed Puff',
                 'square' => 'Coconut Milk Gelatin Square',
                 'cake' => 'Brown Sugar Cake',
-                'ricemeat' => 'Sweet Rice and Meat');
+                'ricemeat' => 'Sweet Rice and Meat',
+                'icecream' => 'Ice Cream');
 
 $main_dishes = array('cuke' => 'Braised Sea Cucumber',
                      'stomach' => "Sauteed Pig's Stomach",
                      'tripe' => 'Sauteed Tripe with Wine Sauce',
                      'taro' => 'Stewed Pork with Taro',
                      'giblets' => 'Baked Giblets with Salt',
-                     'abalone' => 'Abalone with Marrow and Duck Feet');
+                     'abalone' => 'Abalone with Marrow and Duck Feet',
+                     'cheesePizza' => 'Cheese Pizza');
+
+$drink = array('coke' => 'Coke',
+                'dCoke' => 'Diet Coke',
+                'sprite' => 'Sprite',
+                'milk' => 'Milk',
+                'water' => 'Water');
 
 // The main page logic:
 // - If the form is submitted, validate and then process or redisplay
@@ -38,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 function show_form($errors = array()) {
     $defaults = array('delivery' => 'yes',
-                      'size'     => 'medium');
+                      'size'     => 'large');
     // Set up the $form object with proper defaults
     $form = new FormHelper($defaults);
 
@@ -65,8 +73,26 @@ function validate_form( ) {
     } else {
         $input['size'] = '';
     }
-    if (! in_array($input['size'], ['small','medium','large'])) {
+    if (! in_array($input['size'], ['small','medium','large','xlarge'])) {
         $errors[] = 'Please select a size.';
+    }
+    // email is required
+    if (isset($_POST['emailAddress'])) {
+        $input['emailAddress'] = filter_input(INPUT_POST, 'emailAddress', FILTER_VALIDATE_EMAIL);
+    } else {
+        $input['emailAddress'] = false;
+    }
+    if ($input['emailAddress'] === false) {
+        $errors[] = 'Invalid email format';
+    }
+    // drink is required
+    if (isset($_POST['drink'])) {
+        $input['drink'] = $_POST['drink'];
+    } else {
+        $input['drink'] = '';
+    }
+    if (! array_key_exists($input['drink'], $GLOBALS['drink'])) {
+        $errors[] = 'Please select a valid drink item.';
     }
     // sweet is required
     if (isset($_POST['sweet'])) {
@@ -124,7 +150,8 @@ function process_form($input) {
     }
     // build up the text of the order message
     $message=<<<_ORDER_
-Thank you for your order, {$input['name']}.
+Thank you for your order, {$input['name']} at {$input['emailAddress']}.
+You would like a {$input['drink']} to drink.
 You requested the {$input['size']} size of $sweet, $main_dish_1, and $main_dish_2.
 You $delivery want delivery.\n
 _ORDER_;
